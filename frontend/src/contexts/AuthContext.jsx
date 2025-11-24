@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
 
         setUser(user_data.user);
 
-        navigate("/profile");
+        window.location.href = "/profile";
 
         return "All good";
       })
