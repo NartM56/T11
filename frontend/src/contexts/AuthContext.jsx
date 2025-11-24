@@ -77,38 +77,45 @@ export const AuthProvider = ({ children }) => {
    */
   const login = async (username, password) => {
     // TODO: complete me
-
-    return fetch(`${BACKEND_URL}/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    })
-      .then((response) => {
-        console.log(response.ok);
-        if (!response.ok) {
-          setUser(null);
-          throw new Error("Login request failed");
-        }
-
-        return response.json();
-      })
-      .then((user_data) => {
-        console.log(user_data);
-
-        localStorage.setItem("token", user_data.token);
-
-        setUser(user_data.user);
-
-        window.location.href = "/profile";
-
-        return "All good";
-      })
-      .catch((err) => {
-        console.error("Error registering user:", err);
-        return err.message;
+    try {
+      const response = await fetch(`${BACKEND_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
       });
+
+      if (!response.ok) {
+        throw new Error("login request failed");
+      }
+
+      const data = await response.json();
+
+      localStorage.setItem("token", data.token);
+
+      const user_response = await fetch(`${BACKEND_URL}/user/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.token}`,
+        },
+      });
+
+      if (!user_response) {
+        throw new Error("Could not get user");
+      }
+
+      const user_data = await user_response.json();
+
+      setUser(user_data.user);
+
+      navigate("/profile");
+
+      return "All good";
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   /**
